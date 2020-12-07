@@ -1,1 +1,7 @@
-# BlockChain-project
+###### README.md
+
+## 基于区块链的人力资源管理
+
+”区块链+人力资源“组合模式是区块链应用落地深度融合的新业态。
+
+![人力资源图](https://i.loli.net/2020/12/07/GqoMCuX3narN9D4.jpg)

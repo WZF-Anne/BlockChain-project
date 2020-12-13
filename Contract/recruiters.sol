@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: WZF
 pragma solidity ^0.7.0;
-
+//多方招聘方公司进行转移查询员工工作记录
 contract recruiter{
     
     string public companyName;
@@ -12,13 +12,6 @@ contract recruiter{
     constructor(string memory cName, address cAddress){
         companyName = cName;
         companyAddress = cAddress;
-    }
-    
-    struct resumedata{
-        string code;
-        string uname;
-        string evaluate;
-        string date;
     }
     
     struct staff{
@@ -45,4 +38,20 @@ contract recruiter{
        return staffId;
     }
     
+ //查询
+    function getStaff(uint32 staff_id)
+        public
+        view
+        returns (
+            string memory,
+            string memory,
+            address
+        )
+    {
+        return (
+            staffs[staff_id].username,
+             staffs[staff_id].selfvalue,
+             staffs[staff_id].staffAddress
+        );
+    }
 }

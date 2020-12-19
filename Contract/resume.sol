@@ -5,12 +5,10 @@ pragma solidity ^0.7.0;
 //员工自我添加简历，并有权利是否让他人查验
 contract owned {
     address payable owner;
-
     // Contract constructor: set owner
-    constructor() public {
+    constructor(){
         owner = msg.sender;
     }
-
     // Access control modifier
     modifier onlyOwner {
         require(
@@ -20,11 +18,8 @@ contract owned {
         _;
     }
 }
-
 contract resume is owned{
-
  uint32 public resumedata_id = 0;
- 
  struct resumedata{
         string uname;
         string code;
@@ -47,7 +42,8 @@ contract resume is owned{
         resumedatas[resumedataId].certification = _certification;
         
        return resumedataId;
-     }
-     
-     
+     } 
+       function getOwner() external view returns (address) {
+        return owner;
+    }
 }

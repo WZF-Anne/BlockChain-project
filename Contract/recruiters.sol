@@ -1,21 +1,31 @@
- // SPDX-License-Identifier: WZF
+// SPDX-License-Identifier: WZF
 pragma solidity ^0.7.0;
-//多方招聘方公司进行转移查询员工工作记录
+//多方招聘方公司进行权利转移添加并查询员工工作记录等信息
 contract recruiter{
-    
+ 
     string public companyName;
     address public companyAddress;
      uint32 public resumedata_id = 0;
     uint32 public staff_id = 0;
+    address payable owner;
     
-//招聘方公司为部署方，可添加员工身份信息，并对业绩进行评价
-    constructor(string memory cName, address cAddress){
+    //招聘方公司，可添加员工身份信息，并对业绩进行评价 
+     constructor(string memory cName, address cAddress){
         companyName = cName;
         companyAddress = cAddress;
     }
     
+     event newCompany(address indexed owner,address indexed to, bool approved);
+     mapping (address => mapping (address => bool)) private _Approvals;
+     modifier onlyOwner {
+        require(
+            msg.sender == companyAddress,
+            "Only the contract owner can call this function"
+        );
+        _;
+    }
     struct staff{
-          string username; //职员名称
+         string username; //职员名称
         string password; //密码
         string selfvalue;//个人价值
         string entryTime; //入职时间
@@ -23,10 +33,16 @@ contract recruiter{
         string performance; //业绩
         address staffAddress; //对应职员地址
     }
-
     mapping(uint32 => staff) public staffs;
     
-function addStaff(
+     struct company{
+        string companyName;
+        string password;
+        address companyAddress;
+    }
+    mapping(uint32 => company) public companys;
+    
+   function addStaff(
         string memory _name,
         string memory _pwd,
         string memory _value,
@@ -34,7 +50,7 @@ function addStaff(
         string memory _retime,
         string memory _performance,
         address _address
-    ) public returns (uint32) {
+    ) public  onlyOwner returns (uint32) {
         
         uint32 staffId = staff_id++;
         staffs[staffId].username = _name;
@@ -69,8 +85,17 @@ function addStaff(
              staffs[staffid].staffAddress
         );
     }
-    
-    
+     // 招聘方公司权利转移，给求职者新公司权利进行对职员的评价
+    function NewCompany(address to, bool approved) public onlyOwner 
+        returns (bool success)
+    {
+         require(to != msg.sender,"address to can be msg.sender");
+           to = owner;
+          _Approvals[msg.sender][to] = approved;
+        emit newCompany(msg.sender,to, approved); //solhint‐disable‐line indent, nounused‐vars
+        return true;
+    }
+       function getOwner() external view returns (address) {
+        return owner;
+    }
 }
-   
-       

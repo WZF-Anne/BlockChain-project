@@ -85,6 +85,10 @@ contract recruiter{
              staffs[staffid].staffAddress
         );
     }
+//招聘方公司登录后可添加招聘信息，公开给所有用户查看
+ function addRecruitMsg() public {
+        
+    }
      // 招聘方公司权利转移，给求职者新公司权利进行对职员的评价
     function NewCompany(address to, bool approved) public onlyOwner 
         returns (bool success)

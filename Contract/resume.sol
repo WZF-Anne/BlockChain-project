@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: WZF
 pragma solidity ^0.7.0;
 
+import "./Roles/Roles.sol";
+import "./Roles/Staff.sol";
 //关于员工简历认证其真实性
 //员工自我添加简历，并有权利是否让他人查验
 contract owned {
@@ -42,7 +44,8 @@ contract resume is owned{
         resumedatas[resumedataId].certification = _certification;
         
        return resumedataId;
-     } 
+     }
+   
        function getOwner() external view returns (address) {
         return owner;
     }

@@ -1,105 +1,146 @@
 // SPDX-License-Identifier: WZF
 pragma solidity ^0.7.0;
-//多方招聘方公司进行权利转移添加并查询员工工作记录等信息
-contract recruiter{
- 
-    string public companyName;
-    address public companyAddress;
-     uint32 public resumedata_id = 0;
-    uint32 public staff_id = 0;
+//招聘方公司添加招聘信息，快速寻找对应求职者，帮助找到恰好的对应求职者
+
+import "./Roles/Roles.sol";
+import "./Roles/Staff.sol";
+import "./Roles/Companys.sol";
+
+contract Recruiter is StaffRole,CompanysRole{
+      // 为招聘信息定义一个序号ID
+     uint recruitdataID;
+    // Define 'owner'
     address payable owner;
     
-    //招聘方公司，可添加员工身份信息，并对业绩进行评价 
-     constructor(string memory cName, address cAddress){
-        companyName = cName;
-        companyAddress = cAddress;
-    }
-    
-     event newCompany(address indexed owner,address indexed to, bool approved);
-     mapping (address => mapping (address => bool)) private _Approvals;
-     modifier onlyOwner {
-        require(
-            msg.sender == companyAddress,
-            "Only the contract owner can call this function"
-        );
-        _;
-    }
-    struct staff{
-         string username; //职员名称
-        string password; //密码
-        string selfvalue;//个人价值
-        string entryTime; //入职时间
-        string resignTime; //离职时间
-        string performance; //业绩
-        address staffAddress; //对应职员地址
-    }
-    mapping(uint32 => staff) public staffs;
-    
-     struct company{
+    //状态
+     enum State 
+  { 
+    Add,       // 0
+    Posted,     // 1
+    Received   // 2
+  }
+  State constant defaultState = State.Add;
+  
+     // 招聘信息
+     struct RecruitData{
+        uint recruitdataID;
+        string Jobposition;
+        uint age;
+        string gender;
+        // string workTime;
+        // string jobIntroduce;
+        uint  salary;
         string companyName;
-        string password;
+        string companyPosition;
+        State  recruitState;
         address companyAddress;
     }
-    mapping(uint32 => company) public companys;
-    
-   function addStaff(
-        string memory _name,
-        string memory _pwd,
-        string memory _value,
-        string memory _Entime,
-        string memory _retime,
-        string memory _performance,
-        address _address
-    ) public  onlyOwner returns (uint32) {
-        
-        uint32 staffId = staff_id++;
-        staffs[staffId].username = _name;
-        staffs[staffId].password = _pwd;
-        staffs[staffId].selfvalue = _value;
-        staffs[staffId].entryTime =_Entime;
-        staffs[staffId].resignTime =_retime;
-        staffs[staffId].performance = _performance;
-        staffs[staffId].staffAddress = _address;
-        
-       return staffId;
+    mapping(uint => RecruitData) RecruitDatas;
+     mapping (uint => string[]) RecruitHistory;
+     
+      event Add(uint recruitdataID);
+      event Posted(uint recruitdataID);
+      event Received(uint recruitdataID);
+      
+       modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+     // 定义一个修饰符来检查招聘信息状态
+  modifier add(uint _recruitdataID) {
+    require(RecruitDatas[_recruitdataID].recruitState == State.Add );
+    _;
+  }
+  modifier posted(uint _recruitdataID) {
+    require(RecruitDatas[_recruitdataID].recruitState == State.Posted);
+    _;
+  }
+  
+  modifier received(uint _recruitdataID) {
+    require(RecruitDatas[_recruitdataID].recruitState == State.Received);
+    _;
+  }
+   constructor() public payable {
+    owner = msg.sender;
+    recruitdataID = 0;
+  }
+  
+  // Define a function 'kill' if required
+  function kill() public {
+    if (msg.sender == owner) {
+       address payable _add = address(uint160(owner));
+      selfdestruct(_add);
     }
+  }
+  // 招聘方公司登录后可添加招聘信息，公开给所有用户查看
+   function AddRecruitMsg(
+        uint  _recruitdataID,
+        string memory _Jobposition,
+        string memory _gender,
+        uint _age,
+        uint _salary,
+        // string memory _workTime,
+        // string memory _jobIntroduce,
+        string memory _companyName,
+        string memory _companyPosition
+    ) public onlyCompany{ 
+        
+        RecruitData memory temp_recruitdata = RecruitData({
+      recruitdataID:_recruitdataID,
+      Jobposition:_Jobposition,
+      age:_age,
+      gender:_gender,
+    //   workTime:_workTime,
+    //   jobIntroduce:_jobIntroduce,
+      salary:_salary,
+      companyName:_companyName,
+      companyPosition:_companyPosition,
+      recruitState:State.Add,
+      companyAddress:address(0x0)
+      });
+    RecruitDatas[_recruitdataID] = temp_recruitdata;
+    RecruitDatas[_recruitdataID].recruitState = State.Add;
+    emit Add(_recruitdataID);
+    }
+    
+    function  PostRecruitMsg(uint _recruitdataID) public
+       add(_recruitdataID) onlyCompany{
+       
+    RecruitDatas[_recruitdataID].recruitState = State.Posted;
+      emit Posted(_recruitdataID);
+    }
+    
+    function  ReceiveRecruitMsg(uint _recruitdataID) public
+       posted(_recruitdataID) onlyStaff{
+           
+    RecruitDatas[_recruitdataID].recruitState = State.Received;
+      emit Received(_recruitdataID);
+    }
+    
     //查询
-    function getStaff(uint32 staffid)
+    function ViewRecruitMsg(uint _recruitdataID)
         public
         view
         returns (
+            uint,
             string memory,
+            uint,
             string memory,
+            uint,
             string memory,
-            string memory,
-            string memory,
-            address
+            string memory
         )
     {
         return (
-            staffs[staffid].username,
-             staffs[staffid].selfvalue,
-             staffs[staffid].entryTime,
-             staffs[staffid].resignTime,
-             staffs[staffid].performance,
-             staffs[staffid].staffAddress
+            RecruitDatas[_recruitdataID].recruitdataID,
+            RecruitDatas[_recruitdataID].Jobposition,
+             RecruitDatas[_recruitdataID].age,
+             RecruitDatas[_recruitdataID].gender,
+            //  RecruitDatas[_recruitdataID].workTime,
+             RecruitDatas[_recruitdataID].salary,
+             RecruitDatas[_recruitdataID].companyName,
+             RecruitDatas[_recruitdataID].companyPosition
+            //  RecruitDatas[_recruitdataID].companyAddress
         );
-    }
-//招聘方公司登录后可添加招聘信息，公开给所有用户查看
- function addRecruitMsg() public {
-        
-    }
-     // 招聘方公司权利转移，给求职者新公司权利进行对职员的评价
-    function NewCompany(address to, bool approved) public onlyOwner 
-        returns (bool success)
-    {
-         require(to != msg.sender,"address to can be msg.sender");
-           to = owner;
-          _Approvals[msg.sender][to] = approved;
-        emit newCompany(msg.sender,to, approved); //solhint‐disable‐line indent, nounused‐vars
-        return true;
-    }
-       function getOwner() external view returns (address) {
-        return owner;
     }
 }

@@ -6,6 +6,7 @@ import "./Roles/Staff.sol";
 import "./Roles/LastCompany.sol";
 import "./Roles/NewCompany.sol";
 import "./Roles/Companys.sol";
+import  "./Ownable.sol";
 
 //多方招聘方公司进行权利转移添加并查询员工工作记录等信息
 //招聘方公司，可对该员工在公司的工作进行评价 
@@ -60,7 +61,7 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
       event Add(uint staff_id);
       event Posted(uint staff_id);
       event Updated(uint staff_id);
-       event Transfered(uint staff_id);
+      event Transfered(uint staff_id);
       event Received(uint staff_id);
       event Modifyed(uint staff_id);
      
@@ -70,7 +71,7 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
   }
      // 定义一个修饰符来检查简历信息状态
   modifier add(uint _StaffID) {
-    require(Resumedatas[_StaffID].resumeState == State.Add );
+    require(Resumedatas[_StaffID].resumeState == State.Add);
     _;
   }
   modifier posted(uint _StaffID) {
@@ -158,9 +159,10 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
       code:_code,
       evaluate:_evaluate,
       staffAddress:address(0x0),
-      resumeState:State.Updated,
+      resumeState:State.Posted,
       companyAddress:address(0x0)
-      }); 
+      });
+      
        Resumedatas[staffId]= temp_resumedata;
        Resumedatas[staffId].resumeState == State.Updated;
        emit Updated(staffId);
@@ -178,13 +180,14 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
            
     Resumedatas[_staffId].resumeState == State.Posted;
       emit Received(_staffId);
-    }  
+    }
+    
     //确认员工评价权利转移后即可进行对员工的评价
     function ModifyResumeData( 
         uint staffId,
         string memory _entryTime,
         string memory _resignTime,
-        string memory _performance,
+        string memory _performance,//业绩
         string memory _code,//分数，奖金等
         string memory _evaluate
         ) public received(staffId) onlyNewCompany{
@@ -203,13 +206,14 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
       code:_code,
       evaluate:_evaluate,
       staffAddress:address(0x0),
-      resumeState:State.Updated,
+      resumeState:State.Received,
       companyAddress:address(0x0)
       });
       
        Resumedatas[staffId]= temp_resumedata;
        Resumedatas[staffId].resumeState == State.Modifyed;
        emit Modifyed(staffId);
+       
         }
     
     //查询
@@ -218,21 +222,21 @@ contract Resume is StaffRole,LastCompanyRole,NewCompanyRole,CompanysRole{
         view
         returns (
             string memory,
-            string memory,
-            string memory,
-            string memory,
-            string memory,
             uint,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
             address
         )
     {
         return (
              Staffs[staffid].username,
-             Staffs[staffid].selfvalue,
+             Staffs[staffid].age,
              Staffs[staffid].gender,
              Staffs[staffid].education,
              Staffs[staffid].certification,
-             Staffs[staffid].age,
+             Staffs[staffid].selfvalue,
              Staffs[staffid].staffAddress
         );
     }

@@ -112,7 +112,7 @@ live-server --port=8080
 
 ![image-20210106000756238](https://i.loli.net/2021/01/06/iDTzURYkmghFWpN.png)
 
-*****\*方案采用的关键技术\****
+***\*方案采用的关键技术\****
 
 实现：[以太坊，智能合约，web3js，本地geth]
 
